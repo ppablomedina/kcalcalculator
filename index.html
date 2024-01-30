@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.4/dist/sweetalert2.min.css">
+    <title>Calculadora de Calorías</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 8px 0;
+        }
+
+        .delete-button {
+            color: red;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="mb-4">Calculadora de Calorías</h1>
+
+    <div class="mb-3">
+        <label for="foodSelect" class="form-label">Alimento:</label>
+        <select class="form-select" id="foodSelect">
+            <option value="" disabled selected>Selecciona un alimento</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="amountInput" class="form-label">Cantidad (gramos):</label>
+        <input type="text" class="form-control" id="amountInput" placeholder="Ingresa la cantidad">
+    </div>
+
+    <button type="button" class="btn btn-success" onclick="addFood()">Añadir</button>
+
+    <ul class="food-list mt-4" id="foodList"></ul>
+
+    <button type="button" class="btn btn-primary mt-3" onclick="calculateTotalCalories()">Calcular Calorías Totales</button>
+
+    <div class="mt-3" id="resultLabel"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.1.4/dist/sweetalert2.min.js"></script>
+<script>
+    const foodDictionary = {
+        "Arroz": 130,
+        "Mayonesa": 717,
+        "Plátano": 89,
+        "Pollo al horno": 150,
+        "Pasta": 355,
+        "Papas al Horno": 100,
+        "Cebolla": 40,
+        "Ajo": 149,
+        "Pimiento": 20,
+        "Zanahoria": 41,
+        "Huevo": 155,
+        "Tomate": 18,
+        "Queso": 402,
+        "Pescado": 206,
+        "Nuez": 654,
+        "Aceite de oliva": 884,
+        "Pan integral": 250,
+        "Aguacate": 160,
+        "Brócoli": 55,
+        "Calabacín": 17,
+        "Champiñones": 22,
+        "Apio": 16,
+        "Miel": 304,
+        "Leche": 66,
+        "Proteína": 400,
+        "Pechuga Plancha": 111,
+        "Pechuga Empanada": 180,
+        "Mortadela": 333,
+        "Atún": 191,
+        "Tomate Licuado": 27,
+        "Zumo Naranja": 45,
+        "Pistachos": 616,
+        "Avena": 68,
+        "Albóndigas":250,
+        "Yogurt": 150,
+        "Mermelada": 278
+    };
+
+    const foodSelect = document.getElementById('foodSelect');
+    const amountInput = document.getElementById('amountInput');
+    const foodList = document.getElementById('foodList');
+    const resultLabel = document.getElementById('resultLabel');
+
+    // Ordenar la lista de alimentos alfabéticamente
+    const sortedFoods = Object.keys(foodDictionary).sort();
+
+    // Llenar el select con opciones ordenadas
+    sortedFoods.forEach((food) => {
+        const option = document.createElement('option');
+        option.value = food;
+        option.text = food;
+        foodSelect.add(option);
+    });
+
+    const addedFoods = [];
+
+    function addFood() {
+        const food = foodSelect.value;
+        const amount = amountInput.value;
+
+        if (food && amount && /^\d+$/.test(amount)) {
+            const calories = (parseInt(amount) / 100) * foodDictionary[food];
+            const listItem = document.createElement('li');
+            listItem.className = 'food-item';
+
+            listItem.innerHTML = `
+                <span>${food} (${amount}g): ${parseInt(calories)} kcal</span>
+                <span class="delete-button" onclick="deleteFood(this)">Eliminar</span>
+            `;
+
+            foodList.appendChild(listItem);
+
+            addedFoods.push(calories);
+
+            // Limpiar campos de entrada
+            foodSelect.value = '';
+            amountInput.value = '';
+        } else {
+            // Mostrar mensaje de error usando SweetAlert2
+            Swal.fire({
+                title: 'Error',
+                text: 'Por favor, selecciona un alimento válido y proporciona una cantidad numérica.',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        }
+    }
+
+    function deleteFood(deleteButton) {
+        const listItem = deleteButton.parentElement;
+        const index = Array.from(foodList.children).indexOf(listItem);
+
+        // Eliminar el alimento de la lista y del array
+        foodList.removeChild(listItem);
+        addedFoods.splice(index, 1);
+    }
+
+    function calculateTotalCalories() {
+        if (addedFoods.length > 0) {
+            const totalCalories = addedFoods.reduce((sum, calories) => sum + calories, 0);
+            const resultText = `El total de calorías es: ${parseInt(totalCalories)} kcal.`;
+
+            // Mostrar el resultado usando SweetAlert2
+            Swal.fire({
+                title: 'Resultado',
+                text: resultText,
+                icon: 'info',
+                confirmButtonText: 'Ok'
+            });
+
+            // Actualizar la etiqueta de resultado
+            resultLabel.innerHTML = `<p class="mt-3">${resultText}</p>`;
+        } else {
+            // Mostrar mensaje de error usando SweetAlert2
+            Swal.fire({
+                title: 'Error',
+                text: 'Añade alimentos a la lista antes de calcular las calorías totales.',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
